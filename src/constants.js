@@ -15,8 +15,3 @@ export const AI_MAX_DEPTH = 3;
 export const AI_ROOT_MOVE_LIMIT = 35;
 export const AI_MAX_CONTINUATION_STEPS = 40;
 
-export const DEFAULT_RULES = {
-  captureIsMandatory: true,
-  continuationIsMandatory: true,
-  paikaForbiddenAfterCapture: false,
-};

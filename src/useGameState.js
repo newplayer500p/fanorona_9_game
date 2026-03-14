@@ -1,21 +1,19 @@
-import { useState, useEffect, useRef } from 'react';
-import { WHITE, BLACK, GAME_MODE_HVA, FIRST_MOVER_HUMAN, DEFAULT_RULES } from './constants';
-import { initBoard, generateMoves, getContinuations, applyMove, countPieces, opponent } from './boardLogic';
+import { useEffect, useRef, useState } from 'react';
 import { calculateAITurnSequence } from './aiEngine';
+import { applyMove, countPieces, generateMoves, getContinuations, initBoard, opponent } from './boardLogic';
+import { BLACK, FIRST_MOVER_HUMAN, GAME_MODE_HVA, WHITE } from './constants';
 
 export const useGameState = () => {
   const [activeScreen, setActiveScreen] = useState('menu');
   const [gameMode, setGameMode] = useState('hvh');
   const [firstMover, setFirstMover] = useState(FIRST_MOVER_HUMAN);
   const [activeTheme, setActiveTheme] = useState('wood');
-  const [gameRules, setGameRules] = useState(DEFAULT_RULES);
 
   const [board, setBoard] = useState(initBoard);
   const [currentPlayer, setCurrentPlayer] = useState(WHITE);
   const [selectedCell, setSelectedCell] = useState(null);
   const [selectedPieceMoves, setSelectedPieceMoves] = useState([]);
   const [captureChain, setCaptureChain] = useState(null);
-  const [lastCaptureWasMade, setLastCaptureWasMade] = useState(false);
   const [pendingCaptureChoice, setPendingCaptureChoice] = useState(null);
   const [winner, setWinner] = useState(null);
   const [statusMessage, setStatusMessage] = useState('');
@@ -30,7 +28,7 @@ export const useGameState = () => {
   const isAiTurn = activeScreen === 'game' && gameMode === GAME_MODE_HVA && currentPlayer === aiPlayer;
 
   const allValidMoves = activeScreen === 'game' && !winner
-    ? generateMoves(board, currentPlayer, gameRules)
+    ? generateMoves(board, currentPlayer)
     : [];
 
   useEffect(() => {
@@ -40,7 +38,7 @@ export const useGameState = () => {
     if (whiteCount === 0) setWinner(BLACK);
     else if (blackCount === 0) setWinner(WHITE);
     else {
-      const remainingMoves = generateMoves(board, currentPlayer, gameRules);
+      const remainingMoves = generateMoves(board, currentPlayer);
       if (!remainingMoves.length) setWinner(opponent(currentPlayer));
     }
   }, [board, currentPlayer, activeScreen]);
@@ -126,7 +124,6 @@ export const useGameState = () => {
     setSelectedCell(null);
     setSelectedPieceMoves([]);
     setCaptureChain(null);
-    setLastCaptureWasMade(false);
     setPendingCaptureChoice(null);
     setWinner(null);
     setStatusMessage('');
@@ -151,16 +148,15 @@ export const useGameState = () => {
     setTimeout(() => setRecentlyRemovedPieces([]), 500);
 
     const { tr, tc, dr, dc } = move;
-    const didCapture = move.captures.length > 0;
 
-    if (didCapture && gameRules.continuationIsMandatory) {
+    if (move.captures.length > 0) {
       const updatedBlockedDirs = captureChain
         ? new Set([...captureChain.blockedDirs, `${dr},${dc}`, `${-dr},${-dc}`])
         : new Set([`${dr},${dc}`, `${-dr},${-dc}`]);
       const updatedVisitedCells = captureChain
         ? new Set([...captureChain.visitedCells, `${tr},${tc}`])
         : new Set([`${tr},${tc}`]);
-      const continuations = getContinuations(newBoard, tr, tc, currentPlayer, updatedBlockedDirs, updatedVisitedCells, gameRules);
+      const continuations = getContinuations(newBoard, tr, tc, currentPlayer, updatedBlockedDirs, updatedVisitedCells);
 
       if (continuations.length > 0) {
         setCaptureChain({ row: tr, col: tc, blockedDirs: updatedBlockedDirs, visitedCells: updatedVisitedCells });
@@ -171,7 +167,6 @@ export const useGameState = () => {
       }
     }
 
-    setLastCaptureWasMade(didCapture);
     setCaptureChain(null);
     setSelectedCell(null);
     setSelectedPieceMoves([]);
@@ -191,8 +186,7 @@ export const useGameState = () => {
         captureChain.col,
         currentPlayer,
         captureChain.blockedDirs,
-        captureChain.visitedCells,
-        gameRules
+        captureChain.visitedCells
       );
       const movesToTarget = continuations.filter((m) => m.tr === row && m.tc === col);
 
@@ -232,7 +226,7 @@ export const useGameState = () => {
 
   const validDestinationSet = new Set(
     (captureChain
-      ? getContinuations(board, captureChain.row, captureChain.col, currentPlayer, captureChain.blockedDirs, captureChain.visitedCells, gameRules)
+      ? getContinuations(board, captureChain.row, captureChain.col, currentPlayer, captureChain.blockedDirs, captureChain.visitedCells)
       : selectedPieceMoves
     ).map((m) => `${m.tr},${m.tc}`)
   );
@@ -247,8 +241,6 @@ export const useGameState = () => {
     setFirstMover,
     activeTheme,
     setActiveTheme,
-    gameRules,
-    setGameRules,
     board,
     currentPlayer,
     humanPlayer,
