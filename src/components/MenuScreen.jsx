@@ -1,13 +1,13 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import SettingsModal from './SettingsModal';
 
 export default function MenuScreen({
@@ -20,9 +20,10 @@ export default function MenuScreen({
   theme,
 }) {
   const [settingsVisible, setSettingsVisible] = useState(false);
+  const insets = useSafeAreaInsets();
 
   return (
-    <SafeAreaView style={[styles.screen, { backgroundColor: theme.background }]}>
+    <View style={[styles.screen, { backgroundColor: theme.background, paddingTop: insets.top }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.cardBorderColor }]}>
 
@@ -86,7 +87,7 @@ export default function MenuScreen({
         onFirstMoverChange={onFirstMoverChange}
         onClose={() => setSettingsVisible(false)}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 

@@ -1,18 +1,18 @@
-import { useEffect, useRef } from 'react';
-import { Animated, Dimensions, View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Dimensions, Animated, View, Pressable } from 'react-native';
 import Svg, {
-    Circle,
-    Defs,
-    G,
-    Line,
-    Marker,
-    Polygon,
-    RadialGradient,
-    Rect,
-    Stop,
+  Rect,
+  Line,
+  Circle,
+  G,
+  Defs,
+  RadialGradient,
+  Stop,
+  Marker,
+  Polygon,
 } from 'react-native-svg';
-import { getDirections, isInBounds } from '../boardLogic';
-import { COLS, EMPTY, ROWS, WHITE } from '../constants';
+import { ROWS, COLS, EMPTY, WHITE, BLACK } from '../constants';
+import { hasDiagonals, isInBounds, getDirections } from '../boardLogic';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const BOARD_HORIZONTAL_MARGIN = 16;
@@ -24,7 +24,7 @@ const PIECE_RADIUS = Math.floor(CELL_SIZE * 0.38);
 const DOT_RADIUS = Math.max(3, Math.floor(CELL_SIZE * 0.1));
 
 const posX = (col) => BOARD_PAD + col * CELL_SIZE;
-const posY = (row) => BOARD_PAD + (ROWS - 1 - row) * CELL_SIZE;
+const posY = (row) => BOARD_PAD + row * CELL_SIZE;
 
 const buildBoardLines = () => {
   const lineElements = [];
@@ -93,6 +93,15 @@ export default function BoardSvg({
     }
   }
 
+  const handleSvgPress = (event) => {
+    const { locationX, locationY } = event.nativeEvent;
+    const col = Math.round((locationX - BOARD_PAD) / CELL_SIZE);
+    const row = Math.round((locationY - BOARD_PAD) / CELL_SIZE);
+    if (isInBounds(row, col)) {
+      handleCellPress(row, col);
+    }
+  };
+
   return (
     <View style={{ width: BOARD_WIDTH, height: BOARD_HEIGHT }}>
       <Svg
@@ -153,18 +162,7 @@ export default function BoardSvg({
             const isAiDest = aiMoveArrow && aiMoveArrow.tr === r && aiMoveArrow.tc === c;
 
             return (
-              <G
-                key={`cell-${r}-${c}`}
-                onPress={() => handleCellPress(r, c)}
-              >
-                <Rect
-                  x={x - CELL_SIZE / 2}
-                  y={y - CELL_SIZE / 2}
-                  width={CELL_SIZE}
-                  height={CELL_SIZE}
-                  fill="transparent"
-                />
-
+              <G key={`cell-${r}-${c}`}>
                 {isValidDestination && (
                   <Circle
                     cx={x} cy={y}
@@ -251,6 +249,24 @@ export default function BoardSvg({
           strokeColor={theme.destinationRingColor}
         />
       ))}
+
+      <View style={{ position: 'absolute', top: 0, left: 0, width: BOARD_WIDTH, height: BOARD_HEIGHT }}>
+        {Array.from({ length: ROWS }, (_, r) =>
+          Array.from({ length: COLS }, (_, c) => (
+            <Pressable
+              key={`press-${r}-${c}`}
+              style={{
+                position: 'absolute',
+                left: posX(c) - CELL_SIZE / 2,
+                top: posY(r) - CELL_SIZE / 2,
+                width: CELL_SIZE,
+                height: CELL_SIZE,
+              }}
+              onPress={() => handleCellPress(r, c)}
+            />
+          ))
+        )}
+      </View>
     </View>
   );
 }

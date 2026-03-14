@@ -1,7 +1,8 @@
-import GameScreen from './components/GameScreen';
-import MenuScreen from './components/MenuScreen';
-import { THEMES } from './themes';
+import React from 'react';
 import { useGameState } from './useGameState';
+import { THEMES } from './themes';
+import MenuScreen from './components/MenuScreen';
+import GameScreen from './components/GameScreen';
 
 export default function FanoronaGame() {
   const gameState = useGameState();
@@ -12,10 +13,12 @@ export default function FanoronaGame() {
       <MenuScreen
         activeTheme={gameState.activeTheme}
         firstMover={gameState.firstMover}
+        gameRules={gameState.gameRules}
         onStartHvH={() => gameState.startNewGame('hvh')}
         onStartHvA={() => gameState.startNewGame('hva')}
         onThemeChange={gameState.setActiveTheme}
         onFirstMoverChange={gameState.setFirstMover}
+        onRulesChange={gameState.setGameRules}
         theme={theme}
       />
     );
@@ -38,12 +41,14 @@ export default function FanoronaGame() {
       recentlyRemovedSet={gameState.recentlyRemovedSet}
       activeTheme={gameState.activeTheme}
       firstMover={gameState.firstMover}
+      gameRules={gameState.gameRules}
       handleCellPress={gameState.handleCellPress}
       endCurrentTurn={gameState.endCurrentTurn}
       executePlayerMove={gameState.executePlayerMove}
       startNewGame={gameState.startNewGame}
       onThemeChange={gameState.setActiveTheme}
       onFirstMoverChange={gameState.setFirstMover}
+      onRulesChange={gameState.setGameRules}
       onBackToMenu={() => gameState.setActiveScreen('menu')}
       theme={theme}
     />

@@ -1,4 +1,4 @@
-import { BLACK, COLS, EMPTY, ROWS, WHITE } from './constants';
+import { ROWS, COLS, EMPTY, WHITE, BLACK } from './constants';
 
 export const hasDiagonals = (row, col) => (row + col) % 2 === 0;
 
@@ -40,20 +40,20 @@ export const capturedPiecesInLine = (board, row, col, dr, dc, player) => {
 export const initBoard = () => {
   const board = Array.from({ length: ROWS }, () => Array(COLS).fill(EMPTY));
   for (let c = 0; c < COLS; c++) {
-    board[0][c] = BLACK;
-    board[1][c] = BLACK;
+    board[0][c] = WHITE;
+    board[1][c] = WHITE;
   }
-  [BLACK, WHITE, BLACK, WHITE, EMPTY, WHITE, BLACK, WHITE, BLACK].forEach((value, c) => {
+  [WHITE, BLACK, WHITE, BLACK, EMPTY, BLACK, WHITE, BLACK, WHITE].forEach((value, c) => {
     board[2][c] = value;
   });
   for (let c = 0; c < COLS; c++) {
-    board[3][c] = WHITE;
-    board[4][c] = WHITE;
+    board[3][c] = BLACK;
+    board[4][c] = BLACK;
   }
   return board;
 };
 
-export const generateMoves = (board, player) => {
+export const generateMoves = (board, player, rules = { captureIsMandatory: true }) => {
   const captureMoves = [];
   const paikaMoves = [];
 
@@ -80,10 +80,14 @@ export const generateMoves = (board, player) => {
       }
     }
   }
-  return captureMoves.length ? captureMoves : paikaMoves;
+
+  if (rules.captureIsMandatory && captureMoves.length) {
+    return captureMoves;
+  }
+  return [...captureMoves, ...paikaMoves];
 };
 
-export const getContinuations = (board, row, col, player, blockedDirs, visitedCells) => {
+export const getContinuations = (board, row, col, player, blockedDirs, visitedCells, rules = { continuationIsMandatory: true }) => {
   const result = [];
   for (const [dr, dc] of getDirections(row, col)) {
     if (blockedDirs.has(`${dr},${dc}`)) continue;

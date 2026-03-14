@@ -1,15 +1,25 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
+import React from 'react';
 import {
-    Modal,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Modal,
+  View,
+  Text,
+  TouchableOpacity,
+  Switch,
+  ScrollView,
+  StyleSheet,
 } from 'react-native';
-import { FIRST_MOVER_AI, FIRST_MOVER_HUMAN } from '../constants';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { THEMES, THEME_KEYS } from '../themes';
+import { FIRST_MOVER_HUMAN, FIRST_MOVER_AI } from '../constants';
+
+function SectionTitle({ icon, label, theme }) {
+  return (
+    <View style={styles.sectionTitleRow}>
+      <Ionicons name={icon} size={16} color={theme.scoreLabelColor} />
+      <Text style={[styles.sectionTitle, { color: theme.scoreLabelColor }]}>{label}</Text>
+    </View>
+  );
+}
 
 function OptionButton({ label, icon, isSelected, onPress, theme }) {
   return (
@@ -40,20 +50,45 @@ function OptionButton({ label, icon, isSelected, onPress, theme }) {
   );
 }
 
+function RuleToggle({ label, description, value, onToggle, theme }) {
+  return (
+    <View style={[styles.ruleRow, { backgroundColor: theme.unselectedOptionBackground, borderColor: theme.unselectedOptionBorderColor }]}>
+      <View style={styles.ruleLabelGroup}>
+        <Text style={[styles.ruleLabel, { color: theme.optionTextColor }]}>{label}</Text>
+        {description ? (
+          <Text style={[styles.ruleDescription, { color: theme.scoreLabelColor }]}>{description}</Text>
+        ) : null}
+      </View>
+      <Switch
+        value={value}
+        onValueChange={onToggle}
+        trackColor={{ false: theme.unselectedOptionBorderColor, true: theme.selectedOptionBorderColor }}
+        thumbColor={value ? theme.selectedOptionBorderColor : theme.optionTextColor}
+      />
+    </View>
+  );
+}
+
 export default function SettingsModal({
   visible,
   activeTheme,
   firstMover,
+  gameRules,
   onThemeChange,
   onFirstMoverChange,
+  onRulesChange,
   onClose,
 }) {
   const theme = THEMES[activeTheme];
 
+  const toggleRule = (key) => {
+    onRulesChange({ ...gameRules, [key]: !gameRules[key] });
+  };
+
   return (
     <Modal visible={visible} animationType="slide" transparent>
       <View style={styles.overlay}>
-        <SafeAreaView style={[
+        <View style={[
           styles.panel,
           { backgroundColor: theme.settingsBackground, borderColor: theme.settingsBorderColor }
         ]}>
@@ -66,11 +101,39 @@ export default function SettingsModal({
           </View>
 
           <ScrollView contentContainerStyle={styles.scrollContent}>
+
             <View style={styles.section}>
-              <View style={styles.sectionTitleRow}>
-                <Ionicons name="color-palette-outline" size={16} color={theme.scoreLabelColor} />
-                <Text style={[styles.sectionTitle, { color: theme.scoreLabelColor }]}>Theme</Text>
-              </View>
+              <SectionTitle icon="book-outline" label="Regles du jeu" theme={theme} />
+
+              <RuleToggle
+                label="Capture obligatoire"
+                description="Tsy akanda homana — si desactive, le paika est toujours autorise"
+                value={gameRules.captureIsMandatory}
+                onToggle={() => toggleRule('captureIsMandatory')}
+                theme={theme}
+              />
+
+              <RuleToggle
+                label="Continuation obligatoire"
+                description="Apres une capture, doit continuer si possible"
+                value={gameRules.continuationIsMandatory}
+                onToggle={() => toggleRule('continuationIsMandatory')}
+                theme={theme}
+              />
+
+              <RuleToggle
+                label="Paika interdit apres capture"
+                description="Ne peut pas faire un deplacement simple le tour suivant une capture"
+                value={gameRules.paikaForbiddenAfterCapture}
+                onToggle={() => toggleRule('paikaForbiddenAfterCapture')}
+                theme={theme}
+              />
+            </View>
+
+            <View style={[styles.divider, { backgroundColor: theme.settingsBorderColor }]} />
+
+            <View style={styles.section}>
+              <SectionTitle icon="color-palette-outline" label="Theme" theme={theme} />
               {THEME_KEYS.map((key) => (
                 <OptionButton
                   key={key}
@@ -86,12 +149,7 @@ export default function SettingsModal({
             <View style={[styles.divider, { backgroundColor: theme.settingsBorderColor }]} />
 
             <View style={styles.section}>
-              <View style={styles.sectionTitleRow}>
-                <Ionicons name="play-circle-outline" size={16} color={theme.scoreLabelColor} />
-                <Text style={[styles.sectionTitle, { color: theme.scoreLabelColor }]}>
-                  Premier joueur (mode vs IA)
-                </Text>
-              </View>
+              <SectionTitle icon="play-circle-outline" label="Premier joueur (vs IA)" theme={theme} />
               <OptionButton
                 label="Humain commence"
                 icon="person-outline"
@@ -107,8 +165,9 @@ export default function SettingsModal({
                 theme={theme}
               />
             </View>
+
           </ScrollView>
-        </SafeAreaView>
+        </View>
       </View>
     </Modal>
   );
@@ -126,7 +185,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderLeftWidth: 1,
     borderRightWidth: 1,
-    maxHeight: '80%',
+    maxHeight: '85%',
   },
   header: {
     flexDirection: 'row',
@@ -176,6 +235,27 @@ const styles = StyleSheet.create({
   optionLabel: {
     flex: 1,
     fontSize: 15,
+  },
+  ruleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    gap: 12,
+  },
+  ruleLabelGroup: {
+    flex: 1,
+    gap: 2,
+  },
+  ruleLabel: {
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  ruleDescription: {
+    fontSize: 11,
+    lineHeight: 15,
   },
   divider: {
     height: 1,
